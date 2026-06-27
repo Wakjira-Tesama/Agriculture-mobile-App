@@ -25,7 +25,7 @@ const LANG_LABEL: Record<string, string> = {
   ti: "Tigrinya (ትግርኛ)",
 };
 
-import { weather, marketPrices } from "@/lib/data";
+import { weather } from "@/lib/data";
 
 async function buildDataContext(): Promise<string> {
   try {
@@ -45,14 +45,22 @@ async function buildDataContext(): Promise<string> {
       .order("created_at", { ascending: false })
       .limit(15);
 
+    const { data: pricesData } = await supabaseAdmin
+      .from("market_prices")
+      .select("crop, market, price, unit, trend")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
     let context = "\n\n--- REAL-TIME FARM DATA ---";
     
     context += `\nWEATHER in ${weather.location}: ${weather.temp}°C, ${weather.condition}. Forecast: ${weather.alerts.map(a => a.note).join(" ")}`;
     
-    context += `\nMARKET PRICES: `;
-    marketPrices.forEach(p => {
-      context += `${p.crop} in ${p.market} is ${p.price} ETB per ${p.unit}. `;
-    });
+    if (pricesData && pricesData.length > 0) {
+      context += `\nMARKET PRICES: `;
+      pricesData.forEach(p => {
+        context += `${p.crop} in ${p.market} is ${p.price} ETB per ${p.unit}. `;
+      });
+    }
 
     if (listingsData && listingsData.length > 0) {
       context += `\nACTIVE CROP LISTINGS FOR SALE: `;
