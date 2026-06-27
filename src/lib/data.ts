@@ -20,15 +20,6 @@ export const weather = {
   ],
 };
 
-export const marketPrices = [
-  { crop: "Maize", unit: "100kg", price: 4200, change: +3.2, market: "Adama" },
-  { crop: "Teff (white)", unit: "100kg", price: 12500, change: -1.4, market: "Addis Ababa" },
-  { crop: "Coffee", unit: "kg", price: 410, change: +5.1, market: "Hawassa" },
-  { crop: "Wheat", unit: "100kg", price: 5100, change: +0.8, market: "Bahir Dar" },
-  { crop: "Red Onion", unit: "kg", price: 38, change: -4.0, market: "Dire Dawa" },
-  { crop: "Tomato", unit: "kg", price: 28, change: +2.5, market: "Mekelle" },
-];
-
 export const markets = ["Addis Ababa", "Adama", "Hawassa", "Dire Dawa", "Bahir Dar", "Mekelle"];
 
 export const listings = [
