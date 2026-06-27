@@ -3,7 +3,9 @@ import { TrendingUp, Lightbulb } from "lucide-react";
 import { LineChart, Line, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
-import { marketPrices, markets, priceTrend } from "@/lib/data";
+import { markets, priceTrend } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/prices")({
   head: () => ({ meta: [{ title: "AgriBridge — Market Prices" }] }),
@@ -14,6 +16,15 @@ const chartData = priceTrend.map((v, i) => ({ day: `D${i + 1}`, price: v }));
 
 function Prices() {
   const { t } = useI18n();
+
+  const { data: marketPrices = [], isLoading } = useQuery({
+    queryKey: ["market_prices"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("market_prices").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
   return (
     <AppShell title={t("marketPricesTitle")}>
       <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar">
@@ -48,15 +59,19 @@ function Prices() {
 
       <h2 className="mb-3 font-display text-lg font-bold">{t("allCropsToday")}</h2>
       <div className="space-y-2">
-        {marketPrices.map((p) => (
-          <div key={p.crop} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+        {isLoading ? (
+          <p className="text-center text-sm text-muted-foreground p-4">Loading prices...</p>
+        ) : marketPrices.map((p) => (
+          <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
             <div className="flex-1">
               <p className="font-semibold">{p.crop}</p>
               <p className="text-xs text-muted-foreground">{p.market} · {t("perUnit")} {p.unit}</p>
             </div>
             <div className="text-right">
-              <p className="font-display font-bold">{p.price.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">ETB</span></p>
-              <p className={`text-xs font-semibold ${p.change >= 0 ? "text-primary" : "text-destructive"}`}>{p.change >= 0 ? "+" : ""}{p.change}%</p>
+              <p className="font-display font-bold">{Number(p.price).toLocaleString()} <span className="text-xs font-normal text-muted-foreground">ETB</span></p>
+              <p className={`text-xs font-semibold ${p.trend === 'up' ? "text-primary" : p.trend === 'down' ? "text-destructive" : "text-muted-foreground"}`}>
+                {p.trend === 'up' ? "+ (Up)" : p.trend === 'down' ? "- (Down)" : "Stable"}
+              </p>
             </div>
           </div>
         ))}
