@@ -4,7 +4,9 @@ import {
   ShoppingCart, Stethoscope, Shield, Users, TrendingUp, Package,
   DollarSign, BadgeCheck, ArrowLeft, BarChart3,
 } from "lucide-react";
-import { listings, advisoryTickets, marketPrices } from "@/lib/data";
+import { listings, advisoryTickets } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/portal")({
   head: () => ({ meta: [{ title: "AgriBridge — Web Portals" }] }),
@@ -34,6 +36,15 @@ function Stat({ icon: Icon, label, value, trend }: { icon: typeof Users; label: 
 
 function Portal() {
   const [role, setRole] = useState<Role>(null);
+
+  const { data: marketPrices = [], isLoading: isLoadingPrices } = useQuery({
+    queryKey: ["market_prices"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("market_prices").select("*").order("created_at", { ascending: false }).limit(5);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="min-h-dvh bg-background">
@@ -124,8 +135,10 @@ function Portal() {
                   <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
                     <h2 className="flex items-center gap-2 font-display text-lg font-bold"><BarChart3 className="h-5 w-5 text-primary" /> Top Crops by Volume</h2>
                     <div className="mt-4 space-y-3">
-                      {marketPrices.slice(0, 5).map((p, i) => (
-                        <div key={p.crop}>
+                      {isLoadingPrices ? (
+                        <p className="text-sm text-muted-foreground">Loading prices...</p>
+                      ) : marketPrices.map((p, i) => (
+                        <div key={p.id}>
                           <div className="flex justify-between text-sm"><span>{p.crop}</span><span className="text-muted-foreground">{90 - i * 14}%</span></div>
                           <div className="mt-1 h-2 rounded-full bg-secondary"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${90 - i * 14}%` }} /></div>
                         </div>
