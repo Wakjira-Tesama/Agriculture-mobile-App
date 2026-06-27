@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { SpeakButton } from "@/components/SpeakButton";
 import { useI18n } from "@/lib/i18n";
-import { weather, marketPrices } from "@/lib/data";
+import { weather } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,6 +39,15 @@ function Index() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: marketPrices = [], isLoading: isLoadingPrices } = useQuery({
+    queryKey: ["market_prices"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("market_prices").select("*").order("created_at", { ascending: false }).limit(4);
       if (error) throw error;
       return data;
     },
@@ -100,13 +109,16 @@ function Index() {
           <Link to="/prices" className="flex items-center text-sm font-semibold text-primary">{t("all")} <ChevronRight className="h-4 w-4" /></Link>
         </div>
         <div className="flex gap-3 overflow-x-auto no-scrollbar">
-          {marketPrices.slice(0, 4).map((p) => (
-            <div key={p.crop} className="min-w-[140px] rounded-2xl bg-card p-4 shadow-card">
+          {isLoadingPrices ? (
+            <p className="text-sm text-muted-foreground p-2">Loading prices...</p>
+          ) : marketPrices.map((p) => (
+            <div key={p.id} className="min-w-[140px] rounded-2xl bg-card p-4 shadow-card">
               <p className="font-semibold">{p.crop}</p>
               <p className="text-xs text-muted-foreground">{p.market} · {t("perUnit")} {p.unit}</p>
-              <p className="mt-2 font-display text-xl font-bold">{p.price.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">ETB</span></p>
-              <p className={`mt-1 flex items-center gap-1 text-xs font-semibold ${p.change >= 0 ? "text-primary" : "text-destructive"}`}>
-                <TrendingUp className={`h-3.5 w-3.5 ${p.change < 0 ? "rotate-180" : ""}`} /> {p.change >= 0 ? "+" : ""}{p.change}%
+              <p className="mt-2 font-display text-xl font-bold">{Number(p.price).toLocaleString()} <span className="text-xs font-normal text-muted-foreground">ETB</span></p>
+              <p className={`mt-1 flex items-center gap-1 text-xs font-semibold ${p.trend === 'up' ? "text-primary" : p.trend === 'down' ? "text-destructive" : "text-muted-foreground"}`}>
+                <TrendingUp className={`h-3.5 w-3.5 ${p.trend === 'down' ? "rotate-180" : ""}`} /> 
+                {p.trend === 'up' ? "+ (Up)" : p.trend === 'down' ? "- (Down)" : "Stable"}
               </p>
             </div>
           ))}
