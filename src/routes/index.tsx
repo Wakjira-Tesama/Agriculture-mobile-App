@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Sparkles, Store, GraduationCap, CloudSun, MessageCircleQuestion,
-  Users, Tractor, TrendingUp, ChevronRight, Loader2
+  Users, Tractor, TrendingUp, ChevronRight, Loader2, Wallet as WalletIcon
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
@@ -28,6 +28,7 @@ const quickActions = [
   { to: "/learn", key: "qa_learn", icon: GraduationCap, bg: "bg-card" },
   { to: "/market", key: "qa_market", icon: Store, bg: "bg-card" },
   { to: "/community", key: "qa_community", icon: Users, bg: "bg-card" },
+  { to: "/wallet", key: "wallet", icon: WalletIcon, bg: "bg-card" },
 ];
 
 function Index() {
